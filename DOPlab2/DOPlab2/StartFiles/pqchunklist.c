@@ -150,23 +150,20 @@ void Enqueue(pqueueADT pqueue, int newValue){
 
 		while (TRUE){
 
-			while (tempChunk->values[i] >= newValue){
-
-
-				if (i == (tempChunk->chunkSize - 1) && tempChunk->nextChunk != NULL){
+			if (tempChunk->nextChunk != NULL){
+				while (tempChunk->nextChunk->values[0] > newValue){
 					tempChunk = tempChunk->nextChunk;
-					i = 0;
 				}
-				i++;
 			}
-			if (tempChunk->values[i] == NULL){
-				tempChunk->values[i] = newValue;
-				break;
-			}
-			temp = tempChunk->values[i];
-			tempChunk->values[i] = newValue;
-			newValue = temp;
 
+			for (i = 0; i < (tempChunk->chunkSize - 1); i++){
+				if (tempChunk->values[i] < newValue){
+					temp = tempChunk->values[i];
+					tempChunk->values[i] = newValue;
+					newValue = temp;
+				}
+			}
+			break;
 		}	
 
 		tempChunk->chunkSize++;
