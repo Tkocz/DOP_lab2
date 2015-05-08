@@ -51,6 +51,21 @@ bool IsEmpty(pqueueADT pqueue)
 	return (pqueue->head == NULL);
 }
 
+if (IsFull(pqueue)){
+		newChunk = NewChunk();
+
+		while (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK)
+			tempChunk = tempChunk->nextChunk;
+
+		for (i = 0; i < MAX_ELEMS_PER_BLOCK / 2; i++)
+			newChunk->values[i] = tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2];
+		
+		newChunk->nextChunk = tempChunk->nextChunk;
+		tempChunk->nextChunk = newChunk;
+		Enqueue(pqueue, newValue);
+
+	} 
+	
 bool IsFull(pqueueADT pqueue)
 {
 	return (FALSE);
@@ -58,11 +73,11 @@ bool IsFull(pqueueADT pqueue)
 
 /* Implementation notes: Enqueue
  * -----------------------------
- * För att finna rätt position för insättning måste en sökning utföras.
- * Sökningar i enkellänkade listor kan vara 'knöligt'. I den här
- * implementeringen används två 'paralella pekare, en följer ett steg
- * bakom den andra, till dess att vi finner korrekt position för insättning
- * av den nya noden. Notera specialfallet vid insättning vid listans
+ * FÃ¶r att finna rÃ¤tt position fÃ¶r insÃ¤ttning mÃ¥ste en sÃ¶kning utfÃ¶ras.
+ * SÃ¶kningar i enkellÃ¤nkade listor kan vara 'knÃ¶ligt'. I den hÃ¤r
+ * implementeringen anvÃ¤nds tvÃ¥ 'paralella pekare, en fÃ¶ljer ett steg
+ * bakom den andra, till dess att vi finner korrekt position fÃ¶r insÃ¤ttning
+ * av den nya noden. Notera specialfallet vid insÃ¤ttning vid listans
  * huvud.
  */
 
@@ -85,9 +100,9 @@ void Enqueue(pqueueADT pqueue, int newValue)
 
 /* Implementation notes: DequeueMax
  * --------------------------------
- * Det största värdet sparas först i första chunken så att det är
- * enkelt att ta bort. Notera att minne för noder frigörs endast
- * vid förekomsten av en tom chunk.
+ * Det stÃ¶rsta vÃ¤rdet sparas fÃ¶rst i fÃ¶rsta chunken sÃ¥ att det Ã¤r
+ * enkelt att ta bort. Notera att minne fÃ¶r noder frigÃ¶rs endast
+ * vid fÃ¶rekomsten av en tom chunk.
  */
 
 int DequeueMax(pqueueADT pqueue)
@@ -100,9 +115,9 @@ int DequeueMax(pqueueADT pqueue)
 
  	toBeDeleted = pqueue->head;
 	value = pqueue->head->value[0];
-	pqueue->head->numValues--;	//Minska antal värden i chunken med ett
+	pqueue->head->numValues--;	//Minska antal vÃ¤rden i chunken med ett
 	
-	if (pqueue->head->numValues == 0){ //Om inga värden finns kvar i chunken, tar vi bort den och pekar på nästa
+	if (pqueue->head->numValues == 0){ //Om inga vÃ¤rden finns kvar i chunken, tar vi bort den och pekar pÃ¥ nÃ¤sta
 		pqueue->head = pqueue->head->next;
 		FreeBlock(toBeDeleted);
 	}
@@ -111,8 +126,8 @@ int DequeueMax(pqueueADT pqueue)
 
 /* Implementation notes: BytesUsed
  * -------------------------------
- * Minnes förbrukningen utgörs av minnet för en struct pqueueCDT +
- * storleken på summan av samtliga chunks i chunklistan.
+ * Minnes fÃ¶rbrukningen utgÃ¶rs av minnet fÃ¶r en struct pqueueCDT +
+ * storleken pÃ¥ summan av samtliga chunks i chunklistan.
  */
 
 int BytesUsed(pqueueADT pqueue)
