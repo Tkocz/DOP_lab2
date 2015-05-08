@@ -41,13 +41,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$pclibs;$(IncludePath)</IncludePath>
-    <LibraryPath>$pclibs;$(LibraryPath)</LibraryPath>
+    <IncludePath>pclibs;$(IncludePath)</IncludePath>
+    <LibraryPath>pclibs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$pclibs;$(IncludePath)</IncludePath>
-    <LibraryPath>$pclibs;$(LibraryPath)</LibraryPath>
+    <IncludePath>pclibs;$(IncludePath)</IncludePath>
+    <LibraryPath>pclibs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -57,6 +57,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -73,6 +74,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -85,7 +87,10 @@
     <ClCompile Include="pclibs\genlib.c" />
     <ClCompile Include="pclibs\random.c" />
     <ClCompile Include="pclibs\simpio.c" />
-    <ClCompile Include="pclibs\strlib.c" />
+    <ClCompile Include="pclibs\strlib.c">
+      <BufferSecurityCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BufferSecurityCheck>
+      <BufferSecurityCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</BufferSecurityCheck>
+    </ClCompile>
     <ClCompile Include="StartFiles\main.c" />
     <ClCompile Include="StartFiles\performance.c" />
     <ClCompile Include="StartFiles\pqarray.c" />
