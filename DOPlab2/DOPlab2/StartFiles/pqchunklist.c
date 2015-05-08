@@ -1,155 +1,209 @@
-/*
-* File: pqchunklist.c
-* ------------------
-*/
-
 #include "pqueue.h"
 #include "genlib.h"
-#include <stdio.h>
 
-/* Definitions */
+pqueueADT NewPQueue(void);
+void FreePQueue(pqueueADT pqueue);
+bool IsEmpty(pqueueADT pqueue);
+bool IsFull(pqueueADT pqueue);
+void Enqueue(pqueueADT pqueue, int newValue);
+int DequeueMax(pqueueADT pqueue);
 
-#define MAX_ELEMS_PER_BLOCK 4
+#define MAX_ELEMS_PER_BLOCK 10
 
-/* Types */
+typedef struct chunk{
 
-typedef struct chunkT {
-	int numValues;
-	int value[MAX_ELEMS_PER_BLOCK];
-	struct chunkT *next;
-} chunkT;
+	int					chunkSize;
+	int					values[MAX_ELEMS_PER_BLOCK];
+	struct chunk		*nextChunk;
 
-struct pqueueCDT {
-	chunkT *head;
-};
+}chunk;
 
-/* Exported entries */
+typedef struct pqueueCDT {
 
-pqueueADT NewPQueue(void)
-{
+	int		numEntries, numChunks;
+	chunk	*head;
+	
+
+}pqueueCDT;
+
+pqueueADT NewPQueue(void){
+
 	pqueueADT pqueue;
+	
 
 	pqueue = New(pqueueADT);
 	pqueue->head = NULL;
-	return (pqueue);
+	pqueue->numEntries = 0;
+	pqueue->numChunks = 0;
+	
+	return pqueue;
 }
 
-void FreePQueue(pqueueADT pqueue)
-{
-	chunkT *next;
+chunk NewChunk(pqueueADT pqueue){
 
-	while (pqueue->head != NULL) {
-		next = pqueue->head->next;
-		FreeBlock(pqueue->head);
-		pqueue->head = next;
+	chunk *newChunk;
+
+	newChunk = New(chunk *);
+	int i;
+
+	for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
+		newChunk->values[i] = NULL;
 	}
+
+	newChunk->chunkSize = 0;
+	newChunk->nextChunk = NULL;
+	pqueue->numChunks++;
+	
+	return *newChunk;
+}
+
+
+void FreePQueue(pqueueADT pqueue){
+
 	FreeBlock(pqueue);
+
 }
 
-bool IsEmpty(pqueueADT pqueue)
-{
-	return (pqueue->head == NULL);
+bool IsEmpty(pqueueADT pqueue){
+
+	return (pqueue->numEntries == 0);
+	
 }
 
-bool IsFull(pqueueADT pqueue)
-{
-	return (FALSE);
-}
+bool IsFull(pqueueADT pqueue){
 
-/* Implementation notes: Enqueue
-* -----------------------------
-* För att finna rätt position för insättning måste en sökning utföras.
-* Sökningar i enkellänkade chunk-listor kan vara 'knöligt'. I den här
-* implementeringen används två 'paralella pekare, en följer ett steg
-* bakom den andra, till dess att vi finner korrekt chunk för insättning
-* av den nya noden. Om insättning kräver att chunken splittas, görs detta,
-* och ett nytt anrop följer. Notera specialfallet vid insättning vid listans
-* huvud.
-*/
+	int i;
+	chunk *tempChunk = pqueue->head;
 
-void Enqueue(pqueueADT pqueue, int newValue)
-{
-	chunkT *cur, *prev, *newChunk;
-	int i = 0;
+	for(i = 0; i < pqueue->numChunks; i++){
+		if (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK)
+			return TRUE;
+		else
+		tempChunk = tempChunk->nextChunk;
 
-	for (prev = NULL, cur = pqueue->head; cur != NULL; prev = cur, cur = cur->next) {
-		if (newValue > cur->value[0] || newValue >= cur->value[cur->numValues - 1]) break;
+		if (tempChunk == NULL)
+			break;
 	}
+	
+	return FALSE;
+}
 
-	if (cur->numValues < MAX_ELEMS_PER_BLOCK){
-		while (newValue <= cur->value[i]) i++;
-		for (int j = MAX_ELEMS_PER_BLOCK; j > i; j--){
-			cur->value[j] = cur->value[j - 1];
+void Enqueue(pqueueADT pqueue, int newValue){
+
+	chunk	*newChunk, *tempChunk;
+	int		temp;
+	int		i = 0;
+
+	
+	tempChunk = pqueue->head;
+	
+
+	if (IsEmpty(pqueue)){
+
+		newChunk = New(chunk *);
+		int i;
+
+		for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
+			newChunk->values[i] = NULL;
 		}
-		cur->value[i] = newValue;
-		cur->numValues++;
+
+		newChunk->chunkSize = 0;
+		newChunk->nextChunk = NULL;
+		pqueue->numChunks++;
+
+		newChunk->values[0] = newValue;
+		newChunk->chunkSize++;
+		pqueue->numEntries++;
+		pqueue->head = newChunk;
+
 	}
+	else if (IsFull(pqueue)){
 
-	else if (cur->numValues == MAX_ELEMS_PER_BLOCK){
+		newChunk = New(chunk *);
+		int i;
 
-		newChunk = New(chunkT *);
-		newChunk->next = cur;
-		if (prev){
-			newChunk->next = prev->next;
-			prev->next = newChunk;
-		}
-		else{
-			newChunk->next = pqueue->head->next;
-			pqueue->head->next = newChunk;
+		for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
+			newChunk->values[i] = NULL;
 		}
 
-		for (int i = 0; i < MAX_ELEMS_PER_BLOCK / 2; i++){		//Flytta den sista hälften i den fulla chunken till en ny, efterföljande chunk
-			newChunk->value[i] = cur->value[i + MAX_ELEMS_PER_BLOCK / 2];
-			cur->value[i] = cur->value[i + MAX_ELEMS_PER_BLOCK / 2];
-			cur->value[i + MAX_ELEMS_PER_BLOCK / 2] = NULL;
-			cur->numValues--;
-			newChunk->numValues++;
+		newChunk->chunkSize = 0;
+		newChunk->nextChunk = NULL;
+		pqueue->numChunks++;
+
+		while (tempChunk->chunkSize != MAX_ELEMS_PER_BLOCK){
+			tempChunk = tempChunk->nextChunk;
 		}
+
+		for (i = 0; i < MAX_ELEMS_PER_BLOCK / 2; i++){
+			newChunk->values[i] = tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2];
+			tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2] = NULL;
+			newChunk->chunkSize++;
+			tempChunk->chunkSize--;
+		}
+			
+		newChunk->nextChunk = tempChunk->nextChunk;
+		tempChunk->nextChunk = newChunk;
 		Enqueue(pqueue, newValue);
+
+	} 
+	else{
+
+		while (TRUE){
+
+			while (tempChunk->values[i] >= newValue){
+
+
+				if (i == (tempChunk->chunkSize - 1) && tempChunk->nextChunk != NULL){
+					tempChunk = tempChunk->nextChunk;
+					i = 0;
+				}
+				i++;
+			}
+			if (tempChunk->values[i] == NULL){
+				tempChunk->values[i] = newValue;
+				break;
+			}
+			temp = tempChunk->values[i];
+			tempChunk->values[i] = newValue;
+			newValue = temp;
+
+		}	
+
+		tempChunk->chunkSize++;
+		pqueue->numEntries++;
 	}
 
 }
 
-/* Implementation notes: DequeueMax
-* --------------------------------
-* Det största värdet sparas först i första chunken så att det är
-* enkelt att ta bort. Notera att minne för noder frigörs endast
-* vid förekomsten av en tom chunk.
-*/
+int DequeueMax(pqueueADT pqueue){
 
-int DequeueMax(pqueueADT pqueue)
-{
-	chunkT *toBeDeleted;
+	chunk *tempChunk = pqueue->head;
+
 	int value;
-	int i = 0;
+	int i;
+
 	if (IsEmpty(pqueue))
 		Error("Tried to dequeue max from an empty pqueue!");
 
-	toBeDeleted = pqueue->head;
-	value = pqueue->head->value[0];
-	pqueue->head->numValues--;	//Minska antal värden i chunken med ett
+	value = pqueue->head->values[0];
+	for (i = 0; i < tempChunk->chunkSize - 1; i++){
+		if (pqueue->head->values[i] == NULL){
+			break;
+		}
+		pqueue->head->values[i] = pqueue->head->values[i + 1];
 
-	if (pqueue->head->numValues == 0){ //Om inga värden finns kvar i chunken, tar vi bort den och pekar på nästa
-		pqueue->head = pqueue->head->next;
-		FreeBlock(toBeDeleted);
 	}
+	pqueue->numEntries--;	//Minska antal vÃ¤rden i chunken med ett
+
+	if (tempChunk->chunkSize == 0){ //Om inga vÃ¤rden finns kvar i chunken, tar vi bort den och pekar pÃ¥ nÃ¤sta
+		pqueue->head = pqueue->head->nextChunk;
+		FreeBlock(tempChunk);
+	}
+	
 	return (value);
 }
 
-/* Implementation notes: BytesUsed
-* -------------------------------
-* Minnes förbrukningen utgörs av minnet för en struct pqueueCDT +
-* storleken på summan av samtliga chunks i chunklistan.
-*/
-
 int BytesUsed(pqueueADT pqueue)
 {
-	int total;
-	chunkT *cur;
-
-	total = sizeof(*pqueue);
-	for (cur = pqueue->head; cur != NULL; cur = cur->next)
-		total += sizeof(*cur);
-
-	return (total);
+	return (sizeof(*pqueue));
 }
