@@ -68,4 +68,8 @@
       <Filter>Resource Files</Filter>
     </Library>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Docs\Laboration2_PQUEUE_2015.pdf" />
+    <None Include="Docs\resultat.doc" />
+  </ItemGroup>
 </Project>

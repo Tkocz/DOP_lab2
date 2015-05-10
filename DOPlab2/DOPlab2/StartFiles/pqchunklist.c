@@ -5,7 +5,6 @@ pqueueADT NewPQueue(void);
 void FreePQueue(pqueueADT pqueue);
 bool IsEmpty(pqueueADT pqueue);
 bool IsFull(pqueueADT pqueue);
-bool IsChunkFull(pqueueADT pqueue);
 void Enqueue(pqueueADT pqueue, int newValue);
 int DequeueMax(pqueueADT pqueue);
 int cmpfunc(const void * a, const void * b);
@@ -54,23 +53,6 @@ bool IsFull(pqueueADT pqueue)
 	return (FALSE);
 }
 
-bool IsChunkFull(pqueueADT pqueue){
-
-	int i;
-	chunkT *tempChunk = pqueue->head;
-
-	for (i = 0; i < pqueue->numChunks; i++){
-		if (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK)
-			return TRUE;
-		else
-			tempChunk = tempChunk->nextChunk;
-
-		if (tempChunk == NULL)
-			break;
-	}
-	return FALSE;
-}
-
 void Enqueue(pqueueADT pqueue, int newValue){
 
 	chunkT	*newChunk, *tempChunk;
@@ -95,45 +77,44 @@ void Enqueue(pqueueADT pqueue, int newValue){
 		pqueue->numEntries++;
 		pqueue->head = newChunk;
 	}
-	else if (IsChunkFull(pqueue)){
 
-		newChunk = New(chunkT *);
-		int i;
-
-		for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
-			newChunk->values[i] = NULL;
-		}
-
-		newChunk->chunkSize = 0;
-		newChunk->nextChunk = NULL;
-		pqueue->numChunks++;
-
-		while (tempChunk->chunkSize != MAX_ELEMS_PER_BLOCK){
-			tempChunk = tempChunk->nextChunk;
-		}
-
-		for (i = 0; i < MAX_ELEMS_PER_BLOCK / 2; i++){
-			newChunk->values[i] = tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2];
-			tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2] = NULL;
-			newChunk->chunkSize++;
-			tempChunk->chunkSize--;
-		}
-
-		newChunk->nextChunk = tempChunk->nextChunk;
-		tempChunk->nextChunk = newChunk;
-		Enqueue(pqueue, newValue);
-	}
 	else{
 
 		while (tempChunk->nextChunk != NULL && tempChunk->nextChunk->values[0] > newValue){
 			tempChunk = tempChunk->nextChunk;
 		}
+		if (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK){
 
-		tempChunk->values[tempChunk->chunkSize] = newValue;
-		tempChunk->chunkSize++;
-		pqueue->numEntries++;
+			newChunk = New(chunkT *);
+			int i;
 
-		qsort(tempChunk->values, tempChunk->chunkSize, sizeof(int), cmpfunc);	
+			for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
+				newChunk->values[i] = NULL;
+			}
+
+			newChunk->chunkSize = 0;
+			newChunk->nextChunk = NULL;
+			pqueue->numChunks++;
+			
+			for (i = 0; i < MAX_ELEMS_PER_BLOCK / 2; i++){
+				newChunk->values[i] = tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2];
+				tempChunk->values[i + MAX_ELEMS_PER_BLOCK / 2] = NULL;
+				newChunk->chunkSize++;
+				tempChunk->chunkSize--;
+			}
+
+			newChunk->nextChunk = tempChunk->nextChunk;
+			tempChunk->nextChunk = newChunk;
+			Enqueue(pqueue, newValue);
+			return;
+		}
+		else{
+			tempChunk->values[tempChunk->chunkSize] = newValue;
+			tempChunk->chunkSize++;
+			pqueue->numEntries++;
+
+			qsort(tempChunk->values, tempChunk->chunkSize, sizeof(int), cmpfunc);
+		}
 	}
 }
 
