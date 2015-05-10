@@ -8,29 +8,28 @@ bool IsFull(pqueueADT pqueue);
 bool IsChunkFull(pqueueADT pqueue);
 void Enqueue(pqueueADT pqueue, int newValue);
 int DequeueMax(pqueueADT pqueue);
+int cmpfunc(const void * a, const void * b);
 
 #define MAX_ELEMS_PER_BLOCK 6
 
-typedef struct chunk{
+typedef struct chunkT{
 
 	int					chunkSize;
 	int					values[MAX_ELEMS_PER_BLOCK];
-	struct chunk		*nextChunk;
+	struct chunkT		*nextChunk;
 
-}chunk;
+}chunkT;
 
 typedef struct pqueueCDT {
 
 	int		numEntries, numChunks;
-	chunk	*head;
-
+	chunkT	*head;
 
 }pqueueCDT;
 
 pqueueADT NewPQueue(void){
 
 	pqueueADT pqueue;
-
 
 	pqueue = New(pqueueADT);
 	pqueue->head = NULL;
@@ -40,35 +39,14 @@ pqueueADT NewPQueue(void){
 	return pqueue;
 }
 
-chunk NewChunk(pqueueADT pqueue){
-
-	chunk *newChunk;
-
-	newChunk = New(chunk *);
-	int i;
-
-	for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
-		newChunk->values[i] = NULL;
-	}
-
-	newChunk->chunkSize = 0;
-	newChunk->nextChunk = NULL;
-	pqueue->numChunks++;
-
-	return *newChunk;
-}
-
-
 void FreePQueue(pqueueADT pqueue){
 
 	FreeBlock(pqueue);
-
 }
 
 bool IsEmpty(pqueueADT pqueue){
 
 	return (pqueue->numEntries == 0);
-
 }
 
 bool IsFull(pqueueADT pqueue)
@@ -79,7 +57,7 @@ bool IsFull(pqueueADT pqueue)
 bool IsChunkFull(pqueueADT pqueue){
 
 	int i;
-	chunk *tempChunk = pqueue->head;
+	chunkT *tempChunk = pqueue->head;
 
 	for (i = 0; i < pqueue->numChunks; i++){
 		if (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK)
@@ -90,23 +68,18 @@ bool IsChunkFull(pqueueADT pqueue){
 		if (tempChunk == NULL)
 			break;
 	}
-
 	return FALSE;
 }
 
 void Enqueue(pqueueADT pqueue, int newValue){
 
-	chunk	*newChunk, *tempChunk;
-	int		temp;
-	int		i, j;
-
+	chunkT	*newChunk, *tempChunk;
 
 	tempChunk = pqueue->head;
 
-
 	if (IsEmpty(pqueue)){
 
-		newChunk = New(chunk *);
+		newChunk = New(chunkT *);
 		int i;
 
 		for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
@@ -121,11 +94,10 @@ void Enqueue(pqueueADT pqueue, int newValue){
 		newChunk->chunkSize++;
 		pqueue->numEntries++;
 		pqueue->head = newChunk;
-
 	}
 	else if (IsChunkFull(pqueue)){
 
-		newChunk = New(chunk *);
+		newChunk = New(chunkT *);
 		int i;
 
 		for (i = 0; i < MAX_ELEMS_PER_BLOCK; i++){
@@ -150,7 +122,6 @@ void Enqueue(pqueueADT pqueue, int newValue){
 		newChunk->nextChunk = tempChunk->nextChunk;
 		tempChunk->nextChunk = newChunk;
 		Enqueue(pqueue, newValue);
-
 	}
 	else{
 
@@ -159,27 +130,16 @@ void Enqueue(pqueueADT pqueue, int newValue){
 		}
 
 		tempChunk->values[tempChunk->chunkSize] = newValue;
-		
-		for (i = 0; i < (MAX_ELEMS_PER_BLOCK-1); i++){
-			for (j = 0; (j < MAX_ELEMS_PER_BLOCK - 1); j++){
-				if (tempChunk->values[j] < tempChunk->values[j + 1]){
-					temp = tempChunk->values[j];
-					tempChunk->values[j] = tempChunk->values[j + 1];
-					tempChunk->values[j + 1] = temp;
-				}
-			}	
-		}
 		tempChunk->chunkSize++;
 		pqueue->numEntries++;
-		
-	}
 
-	
+		qsort(tempChunk->values, tempChunk->chunkSize, sizeof(int), cmpfunc);	
+	}
 }
 
 int DequeueMax(pqueueADT pqueue){
 
-	chunk *tempChunk = pqueue->head;
+	chunkT *tempChunk = pqueue->head;
 
 	int value;
 	int i;
@@ -195,7 +155,7 @@ int DequeueMax(pqueueADT pqueue){
 		pqueue->head->values[i] = pqueue->head->values[i + 1];
 	}
 	pqueue->head->chunkSize--;
-	pqueue->numEntries--;	//Minska antal värden i chunken med ett
+	pqueue->numEntries--;	//Minska antal värden i chunklistan med ett
 
 	if (tempChunk->chunkSize == 0){ //Om inga värden finns kvar i chunken, tar vi bort den och pekar på nästa
 		pqueue->head = pqueue->head->nextChunk;
@@ -207,5 +167,17 @@ int DequeueMax(pqueueADT pqueue){
 
 int BytesUsed(pqueueADT pqueue)
 {
-	return (sizeof(*pqueue));
+	int total;
+	chunkT *cur;
+
+	total = sizeof(*pqueue);
+	for (cur = pqueue->head; cur != NULL; cur = cur->nextChunk)
+		total += sizeof(*cur);
+
+	return (total);
+}
+
+int cmpfunc(const void * a, const void * b)
+{
+	return (*(int*)b - *(int*)a);
 }
