@@ -5,10 +5,11 @@ pqueueADT NewPQueue(void);
 void FreePQueue(pqueueADT pqueue);
 bool IsEmpty(pqueueADT pqueue);
 bool IsFull(pqueueADT pqueue);
+bool IsChunkFull(pqueueADT pqueue);
 void Enqueue(pqueueADT pqueue, int newValue);
 int DequeueMax(pqueueADT pqueue);
 
-#define MAX_ELEMS_PER_BLOCK 10
+#define MAX_ELEMS_PER_BLOCK 6
 
 typedef struct chunk{
 
@@ -22,20 +23,20 @@ typedef struct pqueueCDT {
 
 	int		numEntries, numChunks;
 	chunk	*head;
-	
+
 
 }pqueueCDT;
 
 pqueueADT NewPQueue(void){
 
 	pqueueADT pqueue;
-	
+
 
 	pqueue = New(pqueueADT);
 	pqueue->head = NULL;
 	pqueue->numEntries = 0;
 	pqueue->numChunks = 0;
-	
+
 	return pqueue;
 }
 
@@ -53,7 +54,7 @@ chunk NewChunk(pqueueADT pqueue){
 	newChunk->chunkSize = 0;
 	newChunk->nextChunk = NULL;
 	pqueue->numChunks++;
-	
+
 	return *newChunk;
 }
 
@@ -67,24 +68,29 @@ void FreePQueue(pqueueADT pqueue){
 bool IsEmpty(pqueueADT pqueue){
 
 	return (pqueue->numEntries == 0);
-	
+
 }
 
-bool IsFull(pqueueADT pqueue){
+bool IsFull(pqueueADT pqueue)
+{
+	return (FALSE);
+}
+
+bool IsChunkFull(pqueueADT pqueue){
 
 	int i;
 	chunk *tempChunk = pqueue->head;
 
-	for(i = 0; i < pqueue->numChunks; i++){
+	for (i = 0; i < pqueue->numChunks; i++){
 		if (tempChunk->chunkSize == MAX_ELEMS_PER_BLOCK)
 			return TRUE;
 		else
-		tempChunk = tempChunk->nextChunk;
+			tempChunk = tempChunk->nextChunk;
 
 		if (tempChunk == NULL)
 			break;
 	}
-	
+
 	return FALSE;
 }
 
@@ -92,11 +98,11 @@ void Enqueue(pqueueADT pqueue, int newValue){
 
 	chunk	*newChunk, *tempChunk;
 	int		temp;
-	int		i = 0;
+	int		i, j;
 
-	
+
 	tempChunk = pqueue->head;
-	
+
 
 	if (IsEmpty(pqueue)){
 
@@ -117,7 +123,7 @@ void Enqueue(pqueueADT pqueue, int newValue){
 		pqueue->head = newChunk;
 
 	}
-	else if (IsFull(pqueue)){
+	else if (IsChunkFull(pqueue)){
 
 		newChunk = New(chunk *);
 		int i;
@@ -140,36 +146,35 @@ void Enqueue(pqueueADT pqueue, int newValue){
 			newChunk->chunkSize++;
 			tempChunk->chunkSize--;
 		}
-			
+
 		newChunk->nextChunk = tempChunk->nextChunk;
 		tempChunk->nextChunk = newChunk;
 		Enqueue(pqueue, newValue);
 
-	} 
+	}
 	else{
 
-		while (TRUE){
+		while (tempChunk->nextChunk != NULL && tempChunk->nextChunk->values[0] > newValue){
+			tempChunk = tempChunk->nextChunk;
+		}
 
-			if (tempChunk->nextChunk != NULL){
-				while (tempChunk->nextChunk->values[0] > newValue){
-					tempChunk = tempChunk->nextChunk;
+		tempChunk->values[tempChunk->chunkSize] = newValue;
+		
+		for (i = 0; i < (MAX_ELEMS_PER_BLOCK-1); i++){
+			for (j = 0; (j < MAX_ELEMS_PER_BLOCK - 1); j++){
+				if (tempChunk->values[j] < tempChunk->values[j + 1]){
+					temp = tempChunk->values[j];
+					tempChunk->values[j] = tempChunk->values[j + 1];
+					tempChunk->values[j + 1] = temp;
 				}
-			}
-
-			for (i = 0; i < (tempChunk->chunkSize - 1); i++){
-				if (tempChunk->values[i] < newValue){
-					temp = tempChunk->values[i];
-					tempChunk->values[i] = newValue;
-					newValue = temp;
-				}
-			}
-			break;
-		}	
-
+			}	
+		}
 		tempChunk->chunkSize++;
 		pqueue->numEntries++;
+		
 	}
 
+	
 }
 
 int DequeueMax(pqueueADT pqueue){
@@ -188,15 +193,15 @@ int DequeueMax(pqueueADT pqueue){
 			break;
 		}
 		pqueue->head->values[i] = pqueue->head->values[i + 1];
-
 	}
+	pqueue->head->chunkSize--;
 	pqueue->numEntries--;	//Minska antal värden i chunken med ett
 
 	if (tempChunk->chunkSize == 0){ //Om inga värden finns kvar i chunken, tar vi bort den och pekar på nästa
 		pqueue->head = pqueue->head->nextChunk;
 		FreeBlock(tempChunk);
 	}
-	
+
 	return (value);
 }
 
