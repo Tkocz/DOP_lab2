@@ -93,10 +93,7 @@
     </ClCompile>
     <ClCompile Include="StartFiles\main.c" />
     <ClCompile Include="StartFiles\performance.c" />
-    <ClCompile Include="StartFiles\pqarray.c" />
-    <ClCompile Include="StartFiles\pqchunklist.c" />
     <ClCompile Include="StartFiles\pqheap.c" />
-    <ClCompile Include="StartFiles\pqlist.c" />
     <ClCompile Include="StartFiles\pqueuetest.c" />
   </ItemGroup>
   <ItemGroup>

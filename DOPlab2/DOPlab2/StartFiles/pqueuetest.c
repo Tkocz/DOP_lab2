@@ -87,7 +87,7 @@ void MorePQueueTest(void)
 	printf("\nThis next test raises an error if your pqueue is working correctly.\n");
 	printf("Once you verify the test, comment it out to move on to the other tests.\n");
 	printf("(The test to comment out is line %d in the file %s).\n", __LINE__ + 1,  __FILE__);
-//	printf("Dequeue from empty pqueue returns %d", DequeueMax(pq));
+	//printf("Dequeue from empty pqueue returns %d", DequeueMax(pq));
 
 	FreePQueue(pq);
 	printf("Hit return to continue: ");

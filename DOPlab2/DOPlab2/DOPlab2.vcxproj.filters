@@ -36,7 +36,7 @@
     <ClCompile Include="pclibs\strlib.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StartFiles\pqchunklist.c">
+    <ClCompile Include="StartFiles\pqheap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
