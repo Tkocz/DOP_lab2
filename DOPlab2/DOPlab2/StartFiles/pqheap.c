@@ -33,7 +33,6 @@ struct pqueueCDT {
 };
 
 /* Exported entries */
-
 pqueueADT NewPQueue(void)
 {
 	pqueueADT pqueue;
@@ -57,7 +56,6 @@ bool IsFull(pqueueADT pqueue)
 {
 	return FALSE;
 }
-//
 
 /* Implementation notes: Enqueue
 * -----------------------------
@@ -93,7 +91,6 @@ void Enqueue(pqueueADT pqueue, int newValue)
 		pqueue->numEntries++;
 		pqueue->values[pqueue->numEntries] = newValue;
 		bubbleUp(pqueue, pqueue->numEntries);
-
 	}
 }
 
