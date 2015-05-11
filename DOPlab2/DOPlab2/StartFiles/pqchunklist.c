@@ -17,7 +17,10 @@ void Enqueue(pqueueADT pqueue, int newValue);
 int DequeueMax(pqueueADT pqueue);
 int cmpfunc(const void * a, const void * b);
 
-/* Predefines */
+/* Constant: MAX_ELEMS_PER_BLOCK
+* ----------------------
+* Den här konstanten anger antalet element per chunk.
+*/
 #define MAX_ELEMS_PER_BLOCK 6
 
 /* Types */
