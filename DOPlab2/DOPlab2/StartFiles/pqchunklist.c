@@ -1,6 +1,14 @@
+/*
+* File: pqlistchunklist.c
+* ------------------
+*
+* Henrik Stridsman & Martin Bergqvist, Data- och programstrukturer VT-2015
+* Senast modifierad: 11/5 - 2015
+*/
 #include "pqueue.h"
 #include "genlib.h"
 
+/* Prototypes */
 pqueueADT NewPQueue(void);
 void FreePQueue(pqueueADT pqueue);
 bool IsEmpty(pqueueADT pqueue);
@@ -9,8 +17,10 @@ void Enqueue(pqueueADT pqueue, int newValue);
 int DequeueMax(pqueueADT pqueue);
 int cmpfunc(const void * a, const void * b);
 
+/* Predefines */
 #define MAX_ELEMS_PER_BLOCK 6
 
+/* Types */
 typedef struct chunkT{
 
 	int					chunkSize;
@@ -26,6 +36,7 @@ typedef struct pqueueCDT {
 
 }pqueueCDT;
 
+/* Exported entries */
 pqueueADT NewPQueue(void){
 
 	pqueueADT pqueue;
@@ -53,6 +64,14 @@ bool IsFull(pqueueADT pqueue)
 	return (FALSE);
 }
 
+/* Implementation notes: Enqueue
+* -----------------------------
+* För att finna rätt position jämförs insert-värdet med första värdet i 
+* nästa chunk. Är värdet större, så sätts värdet in i nuvarande chunk,
+* på sista position, och sorteras på plats med qsort. Skulle chunken vara full,
+* splittas den till två chunks, med hälften av värdena i vardera chunk, och Enqueueu
+* åberopas på nytt.
+*/
 void Enqueue(pqueueADT pqueue, int newValue){
 
 	chunkT	*newChunk, *tempChunk;
@@ -118,6 +137,12 @@ void Enqueue(pqueueADT pqueue, int newValue){
 	}
 }
 
+/* Implementation notes: DequeueMax
+* --------------------------------
+* Det största värdet sparas först i chunklistan så att det är
+* enkelt att ta bort. Notera att minne för chunks frigörs
+* vid borttagning ur kön, om det innebär att chunken blir tom.
+*/
 int DequeueMax(pqueueADT pqueue){
 
 	chunkT *tempChunk = pqueue->head;
@@ -135,8 +160,8 @@ int DequeueMax(pqueueADT pqueue){
 		}
 		pqueue->head->values[i] = pqueue->head->values[i + 1];
 	}
-	pqueue->head->chunkSize--;
-	pqueue->numEntries--;	//Minska antal värden i chunklistan med ett
+	pqueue->head->chunkSize--;		//Minska antal värden i chunken med ett
+	pqueue->numEntries--;			//Minska antal värden i chunklistan med ett
 
 	if (tempChunk->chunkSize == 0){ //Om inga värden finns kvar i chunken, tar vi bort den och pekar på nästa
 		pqueue->head = pqueue->head->nextChunk;
@@ -146,6 +171,11 @@ int DequeueMax(pqueueADT pqueue){
 	return (value);
 }
 
+/* Implementation notes: BytesUsed
+* -------------------------------
+* Minnes förbrukningen utgörs av minnet för en struct pqueueCDT +
+* storleken på summan av samtliga chunks i chunklistan.
+*/
 int BytesUsed(pqueueADT pqueue)
 {
 	int total;
@@ -157,7 +187,10 @@ int BytesUsed(pqueueADT pqueue)
 
 	return (total);
 }
-
+/* Implementation notes: cmpfunc
+* -------------------------------
+* Hjälpfunktion för qsort.
+*/
 int cmpfunc(const void * a, const void * b)
 {
 	return (*(int*)b - *(int*)a);
