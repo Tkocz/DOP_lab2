@@ -126,7 +126,7 @@ int DequeueMax(pqueueADT pqueue)
 */
 int BytesUsed(pqueueADT pqueue)
 {
-	return (sizeof(*pqueue));
+	return (sizeof(int) * pqueue->curSize);
 }
 
 /* Implementation notes: bubbleUp
