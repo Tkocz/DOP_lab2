@@ -1,26 +1,10 @@
-/*
- * File: pqheap.c																//
- * --------------																// Kopia av pqarray, att ha som mall
- * Den här filen implementerar en prioritetskö heap-struktur					//
- *
- * Martin Bergqvist & Henrik Stridsman, Data- och programstrukturer VT-2015
- * Senast modifierad: 11/5 - 2015
- */
-
 #include "pqueue.h"
 #include "genlib.h"
 
-/* Constant: MAX_ELEMENTS
- * ----------------------
- * Den här konstanten anger antalet element det fält som
- * utgör representationen av prioritetskön rymmer.
- */
-
-#define MAX_ELEMENTS 1200000
-
 struct pqueueCDT {
-	int entries[MAX_ELEMENTS];
 	int numEntries;
+	int values[10000000];
+	int curSize;
 };
 
 /* Exported endries */
@@ -46,53 +30,71 @@ bool IsEmpty(pqueueADT pqueue)
 
 bool IsFull(pqueueADT pqueue)
 {
-	return (pqueue->numEntries == MAX_ELEMENTS);
+	return FALSE;
 }
-
-/*
- * Implementation notes: Enqueue
- * -----------------------------
- * Då elementen sparas osorterat i fältet behöver endast nya
- * elementet placeras i slutet av fältet.
- */
 
 void Enqueue(pqueueADT pqueue, int newValue)
 {
-	if (IsFull(pqueue))
-		Error("Tried to enqueue into a priority queue which is full!");
-	pqueue->entries[pqueue->numEntries++] = newValue;
+	int temp, i;
+	int *tempArray;
+
+	if (IsEmpty(pqueue)){
+		//pqueue->values = NewArray(sizeof(int) * 2, int);
+		pqueue->curSize = sizeof(int) * 2;
+		pqueue->values[1] = newValue;
+		pqueue->values[0] = 99999999;
+	}
+	else{
+		pqueue->values[pqueue->numEntries + 1] = newValue;
+		while (pqueue->values[pqueue->numEntries / 2] < newValue){
+			temp = pqueue->values[pqueue->numEntries / 2];
+			pqueue->values[pqueue->numEntries / 2] = pqueue->values[pqueue->numEntries + 1];
+			pqueue->values[pqueue->numEntries + 1] = temp;
+		}
+		
+
+	}
+
+	if (pqueue->numEntries == (pqueue->curSize - 3)){
+		tempArray = pqueue->values;
+		//pqueue->values = NewArray(sizeof(int) * (pqueue->curSize * 2), int);
+		pqueue->curSize = sizeof(int) * (pqueue->curSize * 2);
+
+		for (i = 1; i < pqueue->numEntries + 1; i++){
+			pqueue->values[i] = tempArray[i];
+		}
+	}
+	
+	pqueue->numEntries++;
+
 }
 
-/*
- * Implementation notes: DequeueMax
- * -------------------------------------------------
- * Då elementen sparas osorterat i fältet måste en sökning göras
- * för att finna det största elementet. För att ta bort det största
- * elementet flyttas det sista elementet i fältet till den position
- * i vilken det största elementet återfanns samtidigt som antalet
- * element i fältet minskas med 1. Det finns ingen anledning att skifta
- * samtliga element ett steg åt vänster för att täcka det gap som uppstår
- * vid borttagning av ett element. Det värde som tas bort returneras från
- * funktionen.
- */
 
 int DequeueMax(pqueueADT pqueue)
 {
-	int maxIndex, value, i;
+	int value, i = 1, temp;
 
-	if (IsEmpty(pqueue))
-		Error("Tried to dequeue max from an empty pqueue!");
+	value = pqueue->values[1];
+	pqueue->values[1] = pqueue->values[pqueue->numEntries + 1];
+	pqueue->values[pqueue->numEntries + 1] = NULL;
 
-	maxIndex = 0;
-	for (i = 1; i < pqueue->numEntries; i++) {
-		if (pqueue->entries[i] > pqueue->entries[maxIndex])
-			maxIndex = i;
+	while (pqueue->values[i] < pqueue->values[i * 2] || pqueue->values[i] < pqueue->values[i * 2 + 1] && pqueue->values[i * 2 + 1] != NULL) {
+
+		if (pqueue->values[i * 2] > pqueue->values[i * 2 + 1]){
+			temp = pqueue->values[i * 2];
+			pqueue->values[i * 2] = pqueue->values[i];
+			pqueue->values[i] = temp;
+		}
+		else{
+			temp = pqueue->values[i * 2 + 1];
+			pqueue->values[i * 2 + 1] = pqueue->values[i];
+			pqueue->values[i] = temp;
+		}
+		i++;
 	}
-	/* spara värdet som skall returneras */
-	value = pqueue->entries[maxIndex];
-	/* flytta det sista värdet i fältet hit */
-	pqueue->entries[maxIndex] = pqueue->entries[--(pqueue->numEntries)];
-	return (value);
+	pqueue->numEntries--;
+
+	return value;
 }
 
 int BytesUsed(pqueueADT pqueue)
