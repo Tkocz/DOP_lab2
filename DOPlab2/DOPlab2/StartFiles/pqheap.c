@@ -121,8 +121,7 @@ int DequeueMax(pqueueADT pqueue)
 
 /* Implementation notes: BytesUsed
 * -------------------------------
-* Minnes förbrukningen utgörs av minnet för
-* arrayen som representerar heapen.
+* Minnesförbrukningen utgörs av storleken på arrayen
 */
 int BytesUsed(pqueueADT pqueue)
 {
@@ -133,7 +132,7 @@ int BytesUsed(pqueueADT pqueue)
 * -----------------------------
 * Jämför ett element med sin förälder rekursivt, och byter plats om barnet är större.
 */
-void bubbleUp(pqueueADT pqueue, int nodeIndex) {
+void bubbleUp(pqueueADT pqueue, int nodeIndex){
 
 	int parentIndex, tmp;
 
@@ -154,7 +153,7 @@ void bubbleUp(pqueueADT pqueue, int nodeIndex) {
 * Jämför ett element med sina barn, och byter plats, rekursivt,
 * med det största barnet, om det är större än elementet.
 */
-void heapify(pqueueADT pqueue, int nodeIndex) {
+void heapify(pqueueADT pqueue, int nodeIndex){
 
 	int leftChild, rightChild, maxIndex, tmp;
 
