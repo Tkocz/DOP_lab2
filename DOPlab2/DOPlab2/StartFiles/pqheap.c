@@ -3,7 +3,7 @@
 
 struct pqueueCDT {
 	int numEntries;
-	int values[10000000];
+	int values[4000];
 	int curSize;
 };
 
@@ -35,37 +35,39 @@ bool IsFull(pqueueADT pqueue)
 
 void Enqueue(pqueueADT pqueue, int newValue)
 {
-	int temp, i;
+	int t1, t2, i;
 	int *tempArray;
 
 	if (IsEmpty(pqueue)){
-		//pqueue->values = NewArray(sizeof(int) * 2, int);
-		pqueue->curSize = sizeof(int) * 2;
+		//pqueue->values = NewArray(sizeof(int) * 4, int);
+		pqueue->curSize = sizeof(int)* 4;
 		pqueue->values[1] = newValue;
-		pqueue->values[0] = 99999999;
+		pqueue->numEntries++;
 	}
 	else{
-		pqueue->values[pqueue->numEntries + 1] = newValue;
-		while (pqueue->values[pqueue->numEntries / 2] < newValue){
-			temp = pqueue->values[pqueue->numEntries / 2];
-			pqueue->values[pqueue->numEntries / 2] = pqueue->values[pqueue->numEntries + 1];
-			pqueue->values[pqueue->numEntries + 1] = temp;
+		pqueue->numEntries++;
+		t1 = pqueue->numEntries;
+
+		pqueue->values[pqueue->numEntries] = newValue;
+		while (t1 != 1){
+			if (pqueue->values[t1 / 2] < pqueue->values[t1]){
+				t2 = pqueue->values[t1 / 2];
+				pqueue->values[t1 / 2] = pqueue->values[t1];
+				pqueue->values[t1] = t2;
+			}
+			t1 = t1 / 2;
 		}
 		
 
-	}
-
-	if (pqueue->numEntries == (pqueue->curSize - 3)){
+	}	if (pqueue->numEntries == (pqueue->curSize - 3)){
 		tempArray = pqueue->values;
 		//pqueue->values = NewArray(sizeof(int) * (pqueue->curSize * 2), int);
-		pqueue->curSize = sizeof(int) * (pqueue->curSize * 2);
+		pqueue->curSize = sizeof(int)* (pqueue->curSize * 2);
 
-		for (i = 1; i < pqueue->numEntries + 1; i++){
+		for (i = 1; i <= pqueue->numEntries; i++){
 			pqueue->values[i] = tempArray[i];
 		}
 	}
-	
-	pqueue->numEntries++;
 
 }
 
@@ -75,8 +77,8 @@ int DequeueMax(pqueueADT pqueue)
 	int value, i = 1, temp;
 
 	value = pqueue->values[1];
-	pqueue->values[1] = pqueue->values[pqueue->numEntries + 1];
-	pqueue->values[pqueue->numEntries + 1] = NULL;
+	pqueue->values[1] = pqueue->values[pqueue->numEntries];
+	pqueue->values[pqueue->numEntries] = NULL;
 
 	while (pqueue->values[i] < pqueue->values[i * 2] || pqueue->values[i] < pqueue->values[i * 2 + 1] && pqueue->values[i * 2 + 1] != NULL) {
 
